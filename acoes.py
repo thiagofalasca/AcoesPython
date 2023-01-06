@@ -1,12 +1,18 @@
+from os import remove
 import requests
+import math
+import os.path
 from bs4 import BeautifulSoup
 from lxml import etree
+import glob
+from pyexcel.cookbook import merge_all_to_a_book
 
+homedir = os.path.expanduser('~')
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
 }
 
-with open("acoes.txt") as f:
+with open(f'{homedir}/Programas/Python/AçõesPython/acoes.txt') as f:
     acoes = f.readlines()
 acoes = [x.strip("\n") for x in acoes]
 
@@ -71,14 +77,12 @@ for line in acoes:
             '//*[@id="indicators-section"]/div[2]/div/div[5]/div/div[2]/div/div/strong'
         )[0].text
         mBruta = dom.xpath(
-            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[4]/div/div/strong'
+            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[1]/div/div/strong'
         )[0].text
         mLiq = dom.xpath(
-            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[4]/div/div/strong'
-        )[0].text
+            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[4]/div/div/strong')[0].text
         mEbitda = dom.xpath(
-            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[4]/div/div/strong'
-        )[0].text
+            '//*[@id="indicators-section"]/div[2]/div/div[3]/div/div[2]/div/div/strong')[0].text
         try:
             segmento = dom.xpath(
                 '//*[@id="company-section"]/div[1]/div/div[3]/div/div[3]/div/div/div/a/strong'
@@ -87,7 +91,6 @@ for line in acoes:
             segmento = dom.xpath(
                 '//*[@id="company-section"]/div[1]/div[3]/div/div[3]/div/div/div/a/strong'
             )[0].text
-
         with open("indicadoresAcoes.csv", "a", newline="", encoding="UTF-8") as r:
             linha = (
                 '"'
@@ -98,6 +101,9 @@ for line in acoes:
                 + segmento
                 + '","'
                 + valorAtual
+                + '","'
+                + str(math.sqrt(22.5 + float(lpa.replace(",", ".")) +
+                      float(vpa.replace(",", "."))))
                 + '","'
                 + dy
                 + '","'
@@ -134,8 +140,10 @@ for line in acoes:
                 + "\n"
             )
             r.write(linha)
+        r.close()
     except:
         print("Acao " + line + " nao encontrada!")
 
-r.close()
-
+merge_all_to_a_book(
+    glob.glob(f'{homedir}/Programas/Python/indicadoresAcoes.csv'), 'acoes.xlsx')
+remove(f'{homedir}/Programas/Python/indicadoresAcoes.csv')
